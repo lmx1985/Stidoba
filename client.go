@@ -18,7 +18,7 @@ func main() {
 	// Эта часть отвечает за верификацию пароля (если пароль не верный, то програма отрубается)
 
 	fmt.Println("Server:")
-	buff := make([]byte, 1024)
+	buff := make([]byte, 4096)
 	n, err := conn.Read(buff)
 	if err != nil {
 		return
@@ -64,15 +64,17 @@ func main() {
 		}
 		// получем ответ
 		fmt.Println("Ответ:")
-		buff := make([]byte, 1024)
+		buff := make([]byte, 4096)
 		n, err := conn.Read(buff)
 		if err != nil {
 			break
 		}
 		fmt.Print(string(buff[0:n]))
+		if string(buff[0:n]) == "exit" {
+			break
+		}
 		buff = nil
 		n = 0
 		fmt.Println()
-
 	}
 }
