@@ -3,8 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 )
 
 func main() {
@@ -39,14 +43,14 @@ func main() {
 		}
 	}
 	otvet := make([]byte, 1024)
-	n, err = conn.Read(otvet)
+	n, _ = conn.Read(otvet)
 	fmt.Println(string(otvet[0:n]))
 	z := string(otvet[0:n])
 
 	if z != "Вход разрешен" {
 		os.Exit(1)
 	}
-
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//Начинаем обмен данными с сервером, если пароль введен верно
 	for {
 		var source string
@@ -73,6 +77,43 @@ func main() {
 		if string(buff[0:n]) == "exit" {
 			break
 		}
+		if string(buff[0:n]) == "copy\n" { // дописываем функционал по приему файла
+			//dir, _ := os.Getwd()
+			//fmt.Println(dir)
+
+			fmt.Println("Начинаю скачивание...")
+			const BUFFERSIZE = 4096
+			bufferFileName := make([]byte, 64)
+			bufferFileSize := make([]byte, 10)
+
+			conn.Read(bufferFileSize)
+			fileSize, _ := strconv.ParseInt(strings.Trim(string(bufferFileSize), ":"), 10, 64)
+
+			conn.Read(bufferFileName)
+			fileName := strings.Trim(string(bufferFileName), ":")
+
+			newFile, err := os.Create(fileName)
+
+			if err != nil {
+				fmt.Println(err)
+			}
+			defer newFile.Close()
+			var receivedBytes int64
+
+			for (fileSize - receivedBytes) > BUFFERSIZE {
+				io.CopyN(newFile, conn, (fileSize - receivedBytes))
+				conn.Read(make([]byte, (receivedBytes+BUFFERSIZE)-fileSize))
+			}
+
+			io.CopyN(newFile, conn, BUFFERSIZE)
+			receivedBytes += BUFFERSIZE
+			time.Sleep(2)
+
+			fmt.Println("Received file completely!")
+			newFile.Close()
+
+		}
+
 		buff = nil
 		n = 0
 		fmt.Println()
