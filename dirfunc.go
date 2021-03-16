@@ -3,24 +3,31 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 )
+
+var t string
+var dir string = "c:/Users/"
 
 func Dir(command string, path string) string {
 	var ss string
-	//var t string
-	var dir string = "c:/Users"
+
+	if command == string("exit") {
+		return "exit"
+	}
 
 	if command == string("cd") && len(path) != 0 {
-		dir = dir + path + "/"
+		dir = filepath.Join(dir, path)
 		return dir
 
 	}
 	if command == string("cd") && len(path) == 0 {
-		dir = path + "/"
+		dir = filepath.Join(path)
 		return ""
 
 	}
 	if command == string("cd..") {
+		dir = filepath.Join(dir[0:len(path)])
 		dir = dir[0:len(path)] + "/"
 		return ""
 	}
@@ -35,16 +42,14 @@ func Dir(command string, path string) string {
 		}
 
 		for _, file := range filesFromDir {
-			//if file.IsDir() {
-			//	t = "Directory: "
-			//} else {
-			//	t = "File: "
-			//}
 
-			//fmt.Print(t)
-			//fmt.Printf("%s, size: %d\n", file.Name(), file.Size())
+			if file.IsDir() {
+				t = "Directory: "
+			} else {
+				t = "File: "
+			}
 
-			ss = ss + fmt.Sprintf("%s, size: %d\n", file.Name(), file.Size())
+			ss = ss + fmt.Sprintf("%s %s, size: %d\n", t, file.Name(), file.Size())
 
 		}
 		fmt.Print(ss)
