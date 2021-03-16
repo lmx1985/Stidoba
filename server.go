@@ -3,14 +3,8 @@ package main
 import (
 	"fmt"
 	"net"
+	"strings"
 )
-
-var dict = map[string]string{
-	"red":    "красный",
-	"green":  "зеленый",
-	"blue":   "синий",
-	"yellow": "желтый",
-}
 
 func main() {
 	listener, err := net.Listen("tcp", ":4545")
@@ -53,9 +47,6 @@ func main() {
 func handleConnection(conn net.Conn) {
 	var c, p string
 
-	// на основании полученных данных получаем из словаря перевод
-	fmt.Print(Dir("", ""))
-
 	defer conn.Close()
 	for {
 		// считываем полученные в запросе данные
@@ -68,27 +59,22 @@ func handleConnection(conn net.Conn) {
 		}
 		source := string(input[0:n])
 		// !!! Разбираем ответ сервера на команды (Команда  -  Путь)
-
-		for i, v := range source {
-			if string(v) == string(" ") {
-				c = string(source[0:i])
-				p = string(source[i+1:])
-				break
-			} else {
-				c = source
-				p = ""
-			}
-			conn.Write([]byte(Dir(c, p)))
-
-			// на основании полученных данных получаем из словаря перевод
-			//target, ok := dict[source]
-			//if ok == false { // если данные не найдены в словаре
-			//	target = "undefined"
-			//}
-			// выводим на консоль сервера диагностическую информацию
-			//fmt.Println(source, "-", target)
-			// отправляем данные клиенту
-			//conn.Write([]byte(target))
+		text := strings.Split(source, " ")
+		if len(text) > 1 {
+			c = text[0]
+			p = text[1]
+		} else {
+			c = text[0]
+			p = ""
+		}
+		fmt.Println(c, p)
+		otv := (Dir(string(c), string(p)))
+		if len(otv) != 0 {
+			conn.Write([]byte(otv))
+		} else {
+			otv = "Успешно"
+			conn.Write([]byte(otv))
 		}
 	}
+
 }
